@@ -1,0 +1,622 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RaceDay Portal - POE</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-light">
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="#"><i class="fa-solid fa-flag-checkered me-2"></i>RaceDay Portal</a>
+            <div id="authNav" class="ms-auto">
+                <!-- Dynamically populated auth state -->
+            </div>
+        </div>
+    </nav>
+
+    <div class="container my-4">
+        <div id="alertBox"></div>
+
+        <!-- AUTH SECTION (Login / Register) -->
+        <div id="authSection" class="row justify-content-center align-items-center" style="min-height: 75vh;">
+            <div class="col-md-5">
+                <div class="card shadow border-0 rounded-4 p-4">
+                    <h3 id="authTitle" class="mb-3 text-center fw-bold text-primary">Login to RaceDay</h3>
+                    <form id="authForm">
+                        <div id="nameFields" style="display:none;">
+                            <div class="mb-3">
+                                <label class="form-label">First Name</label>
+                                <input type="text" id="firstName" class="form-control">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Last Name</label>
+                                <input type="text" id="lastName" class="form-control">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Email Address</label>
+                            <input type="email" id="email" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Password</label>
+                            <input type="password" id="password" class="form-control" required>
+                        </div>
+                        <div id="roleField" class="mb-3" style="display:none;">
+                            <label class="form-label">Account Role</label>
+                            <select id="role" class="form-select">
+                                <option value="PARTICIPANT">PARTICIPANT</option>
+                                <option value="ORGANISER">ORGANISER</option>
+                            </select>
+                        </div>
+                        <button type="submit" id="authBtn" class="btn btn-primary w-100 py-2 fw-semibold shadow-sm">Login</button>
+                    </form>
+                    <button class="btn btn-link text-decoration-none mt-3 w-100 text-secondary" onclick="toggleAuthMode()">Need an account? Register here</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- DASHBOARD SECTION (Role-based tabs) -->
+        <div id="dashboardSection" style="display:none;">
+
+            <!-- Navigation Tabs -->
+            <ul class="nav nav-pills mb-4 justify-content-center" id="portalTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active fw-semibold" id="events-tab" data-bs-toggle="pill" data-bs-target="#eventsPane" type="button" role="tab">Upcoming Events</button>
+                </li>
+                <li class="nav-item" role="presentation" id="navOrganiserTab" style="display:none;">
+                    <button class="nav-link fw-semibold" id="organiser-tab" data-bs-toggle="pill" data-bs-target="#organiserPane" type="button" role="tab">Organiser Hub</button>
+                </li>
+                <li class="nav-item" role="presentation" id="navParticipantTab" style="display:none;">
+                    <button class="nav-link fw-semibold" id="participant-tab" data-bs-toggle="pill" data-bs-target="#participantPane" type="button" role="tab">My Enrollments & Results</button>
+                </li>
+            </ul>
+
+            <div class="tab-content" id="portalContent">
+
+                <!-- EVENTS & FILTERING PANE -->
+                <div class="tab-pane fade show active" id="eventsPane" role="tabpanel">
+                    <div class="row mb-4 align-items-center">
+                        <div class="col-md-6">
+                            <h3 class="fw-bold text-dark">Explore Races</h3>
+                        </div>
+                        <div class="col-md-6 text-md-end">
+                            <div class="btn-group" role="group">
+                                <button class="btn btn-outline-dark btn-sm active" onclick="filterEvents('ALL')">All</button>
+                                <button class="btn btn-outline-dark btn-sm" onclick="filterEvents('RUN')">Runs</button>
+                                <button class="btn btn-outline-dark btn-sm" onclick="filterEvents('WALK')">Walks</button>
+                                <button class="btn btn-outline-dark btn-sm" onclick="filterEvents('CYCLE')">Cycles</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="eventsList" class="row"></div>
+                </div>
+
+                <!-- ORGANISER HUB PANE -->
+                <div class="tab-pane fade" id="organiserPane" role="tabpanel">
+                    <div class="row">
+                        <div class="col-lg-6 mb-4">
+                            <div class="card shadow-sm border-0 p-4 h-100">
+                                <h4 class="text-primary fw-bold mb-3"><i class="fa-solid fa-plus-circle me-2"></i>Create New Event</h4>
+                                <form id="eventForm" class="row g-3">
+                                    <div class="col-md-12">
+                                        <label class="form-label">Event Name</label>
+                                        <input type="text" id="eventName" class="form-control" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Event Type</label>
+                                        <select id="eventType" class="form-select" required>
+                                            <option value="RUN">RUN</option>
+                                            <option value="WALK">WALK</option>
+                                            <option value="CYCLE">CYCLE</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Distance</label>
+                                        <input type="text" id="eventDistance" class="form-control" placeholder="e.g., 10KM" required>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <label class="form-label">Description</label>
+                                        <textarea id="eventDesc" class="form-control" rows="2"></textarea>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Date & Time</label>
+                                        <input type="datetime-local" id="eventDate" class="form-control" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Location</label>
+                                        <input type="text" id="eventLocation" class="form-control" required>
+                                    </div>
+                                    <div class="col-12">
+                                        <button type="submit" class="btn btn-success w-100 fw-semibold">Publish Event</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-6 mb-4">
+                            <div class="card shadow-sm border-0 p-4 h-100">
+                                <h4 class="text-secondary fw-bold mb-3"><i class="fa-solid fa-tags me-2"></i>Manage Categories</h4>
+                                <form id="categoryForm" class="row g-3 mb-4">
+                                    <div class="col-md-12">
+                                        <label class="form-label">Category Name (Age/Distance)</label>
+                                        <input type="text" id="categoryName" class="form-control" placeholder="e.g., Senior 21-40" required>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <label class="form-label">Description</label>
+                                        <input type="text" id="categoryDesc" class="form-control">
+                                    </div>
+                                    <div class="col-12">
+                                        <button type="submit" class="btn btn-dark w-100 fw-semibold">Add Category</button>
+                                    </div>
+                                </form>
+                                <h5 class="fw-bold mt-2">Existing Categories</h5>
+                                <ul id="categoryList" class="list-group overflow-auto" style="max-height: 150px;"></ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card shadow-sm border-0 p-4 mb-4">
+                        <h4 class="text-dark fw-bold mb-3"><i class="fa-solid fa-list-check me-2"></i>My Events</h4>
+                        <div id="myEventsList" class="table-responsive"></div>
+                    </div>
+                </div>
+
+                <!-- PARTICIPANT PORTAL PANE -->
+                <div class="tab-pane fade" id="participantPane" role="tabpanel">
+                    <h3 class="fw-bold mb-3">My Enrolments & Race History</h3>
+                    <div id="myEnrollmentsList" class="row"></div>
+
+                    <h3 class="fw-bold mt-4 mb-3">My Results</h3>
+                    <div id="myResultsList" class="table-responsive"></div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- EDIT EVENT MODAL -->
+    <div class="modal fade" id="editEventModal" tabindex="-1">
+        <div class="modal-dialog">
+            <form id="editEventForm" class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold">Edit Event</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body row g-3">
+                    <input type="hidden" id="editEventId">
+                    <div class="col-12"><label class="form-label">Event Name</label><input type="text" id="editEventName" class="form-control" required></div>
+                    <div class="col-md-6">
+                        <label class="form-label">Event Type</label>
+                        <select id="editEventType" class="form-select"><option>RUN</option><option>WALK</option><option>CYCLE</option></select>
+                    </div>
+                    <div class="col-md-6"><label class="form-label">Distance</label><input type="text" id="editEventDistance" class="form-control" required></div>
+                    <div class="col-12"><label class="form-label">Description</label><textarea id="editEventDesc" class="form-control" rows="2"></textarea></div>
+                    <div class="col-md-6"><label class="form-label">Date & Time</label><input type="datetime-local" id="editEventDate" class="form-control" required></div>
+                    <div class="col-md-6"><label class="form-label">Location</label><input type="text" id="editEventLocation" class="form-control" required></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- RESULTS MODAL -->
+    <div class="modal fade" id="resultsModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold" id="resultsModalTitle">Results</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="resultsModalBody"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+                        let isRegistering = false;
+                        let allEvents = [];
+
+                        function showAlert(message, type = 'danger') {
+                            document.getElementById('alertBox').innerHTML = `<div class="alert alert-${type} alert-dismissible fade show shadow-sm" role="alert">${message}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`;
+                        }
+
+                        function toggleAuthMode() {
+                            isRegistering = !isRegistering;
+                            document.getElementById('authTitle').innerText = isRegistering ? 'Register for RaceDay' : 'Login to RaceDay';
+                            document.getElementById('authBtn').innerText = isRegistering ? 'Register' : 'Login';
+                            document.getElementById('nameFields').style.display = isRegistering ? 'block' : 'none';
+                            document.getElementById('roleField').style.display = isRegistering ? 'block' : 'none';
+                        }
+
+                        document.getElementById('authForm').addEventListener('submit', async (e) => {
+                            e.preventDefault();
+                            const email = document.getElementById('email').value;
+                            const password = document.getElementById('password').value;
+
+                            if (isRegistering) {
+                                const firstName = document.getElementById('firstName').value;
+                                const lastName = document.getElementById('lastName').value;
+                                const role = document.getElementById('role').value;
+
+                                const res = await fetch('/api/auth/register', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ firstName, lastName, email, passwordHash: password, role })
+                                });
+
+                                if (res.ok) {
+                                    const data = await res.json();
+                                    showAlert(`Registered successfully! Your <strong>User ID is ${data.userId}</strong>. Please log in.`, 'success');
+                                    toggleAuthMode();
+                                } else {
+                                    const err = await res.json();
+                                    showAlert(err.message || 'Registration failed');
+                                }
+                            } else {
+                                const res = await fetch('/api/auth/login', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ email, password })
+                                });
+
+                                if (res.ok) {
+                                    const data = await res.json();
+                                    localStorage.setItem('token', data.token);
+                                    localStorage.setItem('role', data.role);
+                                    localStorage.setItem('name', data.name);
+                                    localStorage.setItem('userId', data.userId);
+                                    checkAuthState();
+                                } else {
+                                    showAlert('Invalid email or password');
+                                }
+                            }
+                        });
+
+                        function checkAuthState() {
+                            const token = localStorage.getItem('token');
+                            const role = localStorage.getItem('role');
+                            const name = localStorage.getItem('name');
+
+                            if (token) {
+                                document.getElementById('authSection').style.display = 'none';
+                                document.getElementById('dashboardSection').style.display = 'block';
+                                document.getElementById('authNav').innerHTML = `<span class="text-white me-3 fw-semibold">Welcome, ${name} (${role}) · ID: ${localStorage.getItem('userId')}</span><button class="btn btn-outline-light btn-sm" onclick="logout()">Logout</button>`;
+
+                                if (role === 'ORGANISER') {
+                                    document.getElementById('navOrganiserTab').style.display = 'block';
+                                    loadCategories();
+                                    loadMyEvents();
+                                } else {
+                                    document.getElementById('navParticipantTab').style.display = 'block';
+                                    loadMyEnrollments();
+                                    loadMyResults();
+                                }
+                                loadEvents();
+                            } else {
+                                document.getElementById('authSection').style.display = 'flex';
+                                document.getElementById('dashboardSection').style.display = 'none';
+                                document.getElementById('authNav').innerHTML = '';
+                            }
+                        }
+
+                        function logout() {
+                            localStorage.clear();
+                            checkAuthState();
+                        }
+
+                        async function loadEvents() {
+                            const res = await fetch('/api/events');
+                            allEvents = await res.json();
+                            renderEvents(allEvents);
+                        }
+
+                        function filterEvents(type) {
+                            if (type === 'ALL') {
+                                renderEvents(allEvents);
+                            } else {
+                                renderEvents(allEvents.filter(e => e.eventType === type));
+                            }
+                        }
+
+                        function renderEvents(events) {
+                            const list = document.getElementById('eventsList');
+                            list.innerHTML = '';
+                            const role = localStorage.getItem('role');
+
+                            if (events.length === 0) {
+                                list.innerHTML = '<p class="text-muted text-center">No upcoming events found.</p>';
+                                return;
+                            }
+
+                            events.forEach(ev => {
+                                let actionBtn = '';
+                                if (role === 'PARTICIPANT') {
+                                    actionBtn = `<button class="btn btn-outline-primary btn-sm w-100 mt-2" onclick="enrollEvent(${ev.eventID})">Enrol in Event</button>`;
+                                }
+
+                                list.innerHTML += `
+                                    <div class="col-md-4 mb-4">
+                                        <div class="card h-100 shadow-sm border-0 rounded-3">
+                                            <div class="card-body">
+                                                <span class="badge bg-secondary mb-2">${ev.eventType}</span> <span class="badge bg-light text-dark border mb-2">Event ID: ${ev.eventID}</span>
+                                                <h5 class="card-title fw-bold">${ev.eventName}</h5>
+                                                <h6 class="text-muted small">Distance: ${ev.distance}</h6>
+                                                <p class="card-text text-secondary small">${ev.description || 'No description provided.'}</p>
+                                                <p class="small text-dark mb-1"><i class="fa-solid fa-location-dot me-1 text-danger"></i> ${ev.location}</p>
+                                                <p class="small text-dark"><i class="fa-solid fa-calendar-days me-1 text-primary"></i> ${new Date(ev.eventDate).toLocaleString()}</p>
+                                                ${actionBtn}
+                                            </div>
+                                        </div>
+                                    </div>`;
+                            });
+                        }
+
+                        async function loadCategories() {
+                            const res = await fetch('/api/categories');
+                            const categories = await res.json();
+                            const list = document.getElementById('categoryList');
+                            list.innerHTML = '';
+                            categories.forEach(cat => {
+                                list.innerHTML += `<li class="list-group-item d-flex justify-content-between align-items-center"><span><strong>${cat.categoryName}</strong><br><small class="text-muted">${cat.description || ''}</small></span></li>`;
+                            });
+                        }
+
+                        document.getElementById('categoryForm').addEventListener('submit', async (e) => {
+                            e.preventDefault();
+                            const token = localStorage.getItem('token');
+                            const res = await fetch('/api/categories', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                                body: JSON.stringify({
+                                    categoryName: document.getElementById('categoryName').value,
+                                    description: document.getElementById('categoryDesc').value
+                                })
+                            });
+
+                            if (res.ok) {
+                                showAlert('Category added successfully!', 'success');
+                                document.getElementById('categoryForm').reset();
+                                loadCategories();
+                            } else {
+                                showAlert('Failed to add category.');
+                            }
+                        });
+
+                        document.getElementById('eventForm').addEventListener('submit', async (e) => {
+                            e.preventDefault();
+                            const token = localStorage.getItem('token');
+
+                            const res = await fetch('/api/events', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                                body: JSON.stringify({
+                                    eventName: document.getElementById('eventName').value,
+                                    description: document.getElementById('eventDesc').value,
+                                    eventDate: document.getElementById('eventDate').value,
+                                    location: document.getElementById('eventLocation').value,
+                                    distance: document.getElementById('eventDistance').value,
+                                    eventType: document.getElementById('eventType').value
+                                })
+                            });
+
+                            if (res.ok) {
+                                const created = await res.json();
+                                showAlert(`Event published successfully! <strong>Event ID: ${created.eventId}</strong>`, 'success');
+                                document.getElementById('eventForm').reset();
+                                loadEvents();
+                                loadMyEvents();
+                            } else {
+                                showAlert('Failed to publish event.');
+                            }
+                        });
+
+                        async function enrollEvent(eventId) {
+                            // For simplicity in PoE, default to Category ID 1 or prompt
+                            const token = localStorage.getItem('token');
+                            const res = await fetch('/api/enrollments', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                                body: JSON.stringify({ eventID: eventId, categoryID: 1 })
+                            });
+
+                            if (res.ok) {
+                                const enrolled = await res.json();
+                                showAlert(`Successfully enrolled in event! <strong>Your Participation ID is ${enrolled.enrollmentId}</strong>`, 'success');
+                                loadMyEnrollments();
+                            } else {
+                                showAlert('Enrolment failed.');
+                            }
+                        }
+
+                        async function loadMyEnrollments() {
+                            const token = localStorage.getItem('token');
+                            const res = await fetch('/api/enrollments/my', {
+                                headers: { 'Authorization': `Bearer ${token}` }
+                            });
+                            if (!res.ok) { showAlert('Could not load enrolments (' + res.status + ')'); return; }
+                            const enrollments = await res.json();
+                            const list = document.getElementById('myEnrollmentsList');
+                            list.innerHTML = '';
+
+                            if (enrollments.length === 0) {
+                                list.innerHTML = '<p class="text-muted">You have not enrolled in any events yet.</p>';
+                                return;
+                            }
+
+                            enrollments.forEach(en => {
+                                list.innerHTML += `
+                                    <div class="col-md-6 mb-3">
+                                        <div class="card shadow-sm border-0 p-3">
+                                            <h5 class="fw-bold">${en.event.eventName}</h5>
+                                            <p class="mb-1 text-muted small">📍 ${en.event.location} | 📅 ${new Date(en.event.eventDate).toLocaleDateString()}</p>
+                                            <span class="badge bg-success mt-2">Enrolled</span> <span class="badge bg-light text-dark border mt-2">Participation ID: ${en.enrollmentID}</span>
+                                        </div>
+                                    </div>`;
+                            });
+                        }
+
+                        // ---------- helpers ----------
+                        const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+                        const authHeaders = () => ({ 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` });
+                        async function errMsg(res, fallback) {
+                            try { const d = await res.json(); return d.message || d.title || fallback; } catch { return fallback; }
+                        }
+
+                        // ---------- organiser: my events ----------
+                        let myEvents = [];
+                        let currentResultsEvent = null;
+
+                        async function loadMyEvents() {
+                            const list = document.getElementById('myEventsList');
+                            const res = await fetch('/api/events/mine', { headers: authHeaders() });
+                            if (!res.ok) { list.innerHTML = `<p class="text-danger">Could not load your events (${res.status}).</p>`; return; }
+                            myEvents = await res.json();
+                            if (myEvents.length === 0) { list.innerHTML = '<p class="text-muted">You have not created any events yet.</p>'; return; }
+
+                            list.innerHTML = `<table class="table align-middle">
+                                <thead><tr><th>Event</th><th>Date</th><th>Location</th><th class="text-end">Actions</th></tr></thead>
+                                <tbody>${myEvents.map(ev => `
+                                    <tr>
+                                        <td><strong>${esc(ev.eventName)}</strong><br><small class="text-muted">ID ${ev.eventID} · ${esc(ev.eventType)} · ${esc(ev.distance)}</small></td>
+                                        <td>${new Date(ev.eventDate).toLocaleString()}</td>
+                                        <td>${esc(ev.location)}</td>
+                                        <td class="text-end text-nowrap">
+                                            <button class="btn btn-outline-success btn-sm" onclick="openResults(${ev.eventID})">Results</button>
+                                            <button class="btn btn-outline-primary btn-sm" onclick="openEditEvent(${ev.eventID})">Edit</button>
+                                            <button class="btn btn-outline-danger btn-sm" onclick="deleteEvent(${ev.eventID})">Delete</button>
+                                        </td>
+                                    </tr>`).join('')}
+                                </tbody></table>`;
+                        }
+
+                        function openEditEvent(id) {
+                            const ev = myEvents.find(e => e.eventID === id);
+                            if (!ev) return;
+                            document.getElementById('editEventId').value = ev.eventID;
+                            document.getElementById('editEventName').value = ev.eventName;
+                            document.getElementById('editEventType').value = ev.eventType;
+                            document.getElementById('editEventDistance').value = ev.distance;
+                            document.getElementById('editEventDesc').value = ev.description || '';
+                            document.getElementById('editEventDate').value = String(ev.eventDate).slice(0, 16);
+                            document.getElementById('editEventLocation').value = ev.location;
+                            bootstrap.Modal.getOrCreateInstance(document.getElementById('editEventModal')).show();
+                        }
+
+                        document.getElementById('editEventForm').addEventListener('submit', async (e) => {
+                            e.preventDefault();
+                            const id = document.getElementById('editEventId').value;
+                            const res = await fetch(`/api/events/${id}`, {
+                                method: 'PUT',
+                                headers: authHeaders(),
+                                body: JSON.stringify({
+                                    eventName: document.getElementById('editEventName').value,
+                                    description: document.getElementById('editEventDesc').value,
+                                    eventDate: document.getElementById('editEventDate').value,
+                                    location: document.getElementById('editEventLocation').value,
+                                    distance: document.getElementById('editEventDistance').value,
+                                    eventType: document.getElementById('editEventType').value
+                                })
+                            });
+                            if (res.ok) {
+                                bootstrap.Modal.getOrCreateInstance(document.getElementById('editEventModal')).hide();
+                                showAlert('Event updated.', 'success');
+                                loadEvents();
+                                loadMyEvents();
+                            } else {
+                                showAlert(await errMsg(res, 'Failed to update event.'));
+                            }
+                        });
+
+                        async function deleteEvent(id) {
+                            if (!confirm('Delete this event? Its enrolments and results will be deleted too.')) return;
+                            const res = await fetch(`/api/events/${id}`, { method: 'DELETE', headers: authHeaders() });
+                            if (res.ok) {
+                                showAlert('Event deleted.', 'success');
+                                loadEvents();
+                                loadMyEvents();
+                            } else {
+                                showAlert(await errMsg(res, 'Failed to delete event.'));
+                            }
+                        }
+
+                        // ---------- organiser: results ----------
+                        async function openResults(eventId) {
+                            const ev = myEvents.find(e => e.eventID === eventId);
+                            currentResultsEvent = eventId;
+                            document.getElementById('resultsModalTitle').textContent = 'Results - ' + (ev ? ev.eventName : '');
+                            const body = document.getElementById('resultsModalBody');
+                            body.innerHTML = '<p class="text-muted">Loading...</p>';
+                            bootstrap.Modal.getOrCreateInstance(document.getElementById('resultsModal')).show();
+
+                            const res = await fetch(`/api/events/${eventId}/enrollments`, { headers: authHeaders() });
+                            if (!res.ok) { body.innerHTML = `<p class="text-danger">${esc(await errMsg(res, 'Could not load participants.'))}</p>`; return; }
+                            const enrollments = await res.json();
+                            if (enrollments.length === 0) { body.innerHTML = '<p class="text-muted">No participants have enrolled in this event yet.</p>'; return; }
+
+                            body.innerHTML = `<div class="table-responsive"><table class="table align-middle">
+                                <thead><tr><th>Participant</th><th>Category</th><th>Finish time</th><th>Position</th><th></th></tr></thead>
+                                <tbody>${enrollments.map(en => `
+                                    <tr>
+                                        <td>${esc(en.participantName)}<br><small class="text-muted">Participation ID ${en.enrollmentID}</small></td>
+                                        <td>${esc(en.categoryName)}</td>
+                                        <td><input type="text" id="time-${en.enrollmentID}" class="form-control form-control-sm" placeholder="hh:mm:ss" value="${en.result ? esc(en.result.finishTime) : ''}" style="width:110px"></td>
+                                        <td><input type="number" min="1" id="pos-${en.enrollmentID}" class="form-control form-control-sm" value="${en.result ? en.result.finishingPosition : ''}" style="width:80px"></td>
+                                        <td><button class="btn btn-sm ${en.result ? 'btn-outline-primary' : 'btn-success'}" onclick="saveResult(${en.enrollmentID}, ${en.result ? en.result.resultID : 'null'})">${en.result ? 'Update' : 'Publish'}</button></td>
+                                    </tr>`).join('')}
+                                </tbody></table></div>`;
+                        }
+
+                        async function saveResult(enrollmentId, resultId) {
+                            const payload = {
+                                enrollmentID: enrollmentId,
+                                finishTime: document.getElementById('time-' + enrollmentId).value.trim(),
+                                finishingPosition: parseInt(document.getElementById('pos-' + enrollmentId).value, 10) || 0
+                            };
+                            const res = await fetch(resultId ? `/api/results/${resultId}` : '/api/results', {
+                                method: resultId ? 'PUT' : 'POST',
+                                headers: authHeaders(),
+                                body: JSON.stringify(payload)
+                            });
+                            if (res.ok) {
+                                showAlert(resultId ? 'Result updated.' : 'Result published.', 'success');
+                                openResults(currentResultsEvent);
+                            } else {
+                                showAlert(await errMsg(res, 'Failed to save result.'));
+                            }
+                        }
+
+                        // ---------- participant: my results ----------
+                        async function loadMyResults() {
+                            const list = document.getElementById('myResultsList');
+                            const res = await fetch('/api/results/my', { headers: authHeaders() });
+                            if (!res.ok) { list.innerHTML = `<p class="text-danger">Could not load results (${res.status}).</p>`; return; }
+                            const results = await res.json();
+                            if (results.length === 0) { list.innerHTML = '<p class="text-muted">No results have been published for you yet.</p>'; return; }
+
+                            list.innerHTML = `<table class="table align-middle bg-white shadow-sm">
+                                <thead><tr><th>Event</th><th>Date</th><th>Category</th><th>Finish time</th><th>Position</th></tr></thead>
+                                <tbody>${results.map(r => `
+                                    <tr>
+                                        <td><strong>${esc(r.eventName)}</strong><br><small class="text-muted">${esc(r.location)} · ${esc(r.distance)}</small></td>
+                                        <td>${new Date(r.eventDate).toLocaleDateString()}</td>
+                                        <td>${esc(r.categoryName)}</td>
+                                        <td>${esc(r.finishTime)}</td>
+                                        <td><span class="badge bg-success">#${r.finishingPosition}</span></td>
+                                    </tr>`).join('')}
+                                </tbody></table>`;
+                        }
+
+                        checkAuthState();
+    </script>
+</body>
+</html>
